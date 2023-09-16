@@ -1,0 +1,34 @@
+name: "nllb_1_2B_py"
+backend: "python"
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  },
+  {
+    name: "dst_lang"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  },
+  {
+    name: "src_lang"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  },
+]
+
+output [
+  {
+    name: "translation"
+    data_type: TYPE_STRING
+    dims: [ 1 ]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_GPU
+  }
+]
