@@ -1,5 +1,6 @@
-name: "nllb_1_2B_py"
+name: "nllb"
 backend: "python"
+max_batch_size: 0
 
 input [
   {
@@ -8,7 +9,7 @@ input [
     dims: [ -1 ]
   },
   {
-    name: "dst_lang"
+    name: "tgt_lang"
     data_type: TYPE_STRING
     dims: [ -1 ]
   },
@@ -16,7 +17,7 @@ input [
     name: "src_lang"
     data_type: TYPE_STRING
     dims: [ -1 ]
-  },
+  }
 ]
 
 output [

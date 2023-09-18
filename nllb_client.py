@@ -2,44 +2,39 @@
 import tritonclient.http as httpclient
 import numpy as np
 import argparse
+from tritonclient import utils
 
+BCP_47_CODES_URL = "https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200"
 
-def main(model_name, dst_lang, src_lang="eng_Latn"):
-    # Setting up client
+def main(model_name, input_text, tgt_lang, src_lang="eng_Latn"):
     client = httpclient.InferenceServerClient(url="localhost:8000")
 
-    # Create input tensor
-    inputs = ["Back in the spring of 2018, I sat at the Cancún airport, almost in a state of paralysis. I was staring at the planes as my thoughts raced back to what I had just witnessed. Could it possibly be true?",
-              dst_lang,
-              src_lang]
-    input_arr = [np.array(list(s)) for s in inputs]
+    inputs = [
+        ("input", input_text),
+        ("tgt_lang", tgt_lang),
+        ("src_lang", src_lang)
+    ]
 
-    input_tensor = httpclient.InferInput("text", input_arr[0].shape, datatype="STRING")
-    input_tensor.set_data_from_numpy(input_arr[0])
-    dst_tensor = httpclient.InferInput("dst_lang", input_arr[1].shape, datatype="STRING")
-    dst_tensor.set_data_from_numpy(input_arr[1])
-    src_tensor = httpclient.InferInput("src_lang", input_arr[2].shape, datatype="STRING")
-    src_tensor.set_data_from_numpy(input_arr[2])
+    # Create tensors for each input
+    tensors = []
+    for name, input in inputs:
+        # arr = utils.serialize_byte_tensor(np.array(list(str)))
+        arr = np.array([input.encode()], dtype=np.object_)
+        tensor = httpclient.InferInput(name, arr.shape, datatype="BYTES")
+        tensor.set_data_from_numpy(arr)
+        tensors.append(tensor)
 
-    # Query the server
-    response = client.infer(model_name=model_name, inputs=[input_tensor, dst_tensor, src_tensor])
-
-    # Get the output tensor
-    output_tensor = response.as_numpy("translation")
-
-    print("Translation:", output_tensor[0].decode("utf-8"))
+    response = client.infer(model_name=model_name, inputs=tensors)
+    print("Translation:", response.as_numpy("translation")[0].decode("utf-8"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--model_name", default="nllb"
-    )
-    parser.add_argument(
-        "--src_lang", default="eng_Latn"
-    )
-    parser.add_argument(
-        "--dst_lang", required=True
-    )
+    
+    parser.add_argument("--model_name", default="nllb", help="Name of the model to use for inference.")
+    parser.add_argument("--input", required=True, help="The text you want to translate.")
+    parser.add_argument("--tgt_lang", required=True, help=f"Target language for translation. This argument is always required. Refer to the provided link for available language BCP-47 codes: {BCP_47_CODES_URL}")
+    parser.add_argument("--src_lang", default="eng_Latn", help=f"Source language for translation. By default, English (eng_Latn) is set. In order to translate from a different language, specify the BCP-47 code. Refer to the provided link for available BCP-47 codes: {BCP_47_CODES_URL}")
+    
     args = parser.parse_args()
-    main(args.model_name, args.dst_lang, src_lang=args.src_lang)
+    main(model_name=args.model_name, input_text=args.input, tgt_lang=args.tgt_lang, src_lang=args.src_lang)
