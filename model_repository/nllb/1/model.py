@@ -4,14 +4,16 @@ from transformers import (
 )
 import triton_python_backend_utils as pb_utils
 import numpy as np
+from pathlib import Path
 
 
 class TritonPythonModel:
     def initialize(self, args):
-        self.model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-1.3B", device_map="auto")
+        self.model_dir = Path(__name__).with_name("huggingface-model-cache")
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(self.model_dir)
         
         # Dict to store tokenizers for different source languages. English tokenizer is preloaded.
-        self.tokenizers = {"eng_Latn": AutoTokenizer.from_pretrained("facebook/nllb-200-1.3B")}
+        self.tokenizers = {"eng_Latn": AutoTokenizer.from_pretrained(self.model_dir)}
 
     def execute(self, requests):
         responses = []
@@ -26,12 +28,12 @@ class TritonPythonModel:
             # Check if we have the tokenizer for the current source language
             if src_lang not in self.tokenizers:
                 self.tokenizers[src_lang] = AutoTokenizer.from_pretrained(
-                    "facebook/nllb-200-1.3B",
+                    self.model_dir,
                     src_lang=src_lang
                 )
 
             tokenizer = self.tokenizers[src_lang]
-            inputs = tokenizer(input_str, padding=True, truncation=True, return_tensors="pt").to("cuda")
+            inputs = tokenizer(input_str, padding=True, truncation=True, return_tensors="pt")
 
             translated_tokens = self.model.generate(
                 **inputs, forced_bos_token_id=tokenizer.lang_code_to_id[tgt_lang]
