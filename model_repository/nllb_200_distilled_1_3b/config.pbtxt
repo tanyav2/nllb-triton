@@ -1,6 +1,7 @@
-name: "nllb"
+name: "nllb_200_distilled_1_3b"
 backend: "python"
-max_batch_size: 0
+max_batch_size: 128
+dynamic_batching { }
 
 input [
   {
