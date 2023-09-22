@@ -1,0 +1,20 @@
+[
+    {
+        "input_text": "what an easy breezy day it is today",
+        "tgt_lang": "hin_Deva"
+    },
+    {
+        "input_text": "I saw her duck.",
+        "tgt_lang": "jpn_Jpan"
+    },
+    {
+        "input_text": "De zon komt op in het oosten.",
+        "src_lang": "nld_Latn",
+        "tgt_lang": "eng_Latn"
+    },
+    {
+        "input_text": "Alice had een lammetje. Op een dag nam ze haar lammetje mee naar school. Helaas werd het lam gedood door een boze kerel. Alice was nogal verdrietig over deze situatie.",
+        "src_lang": "nld_Latn",
+        "tgt_lang": "eng_Latn"
+    }
+]

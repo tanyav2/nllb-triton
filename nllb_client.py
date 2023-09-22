@@ -1,16 +1,22 @@
 import tritonclient.grpc as grpcclient
 import numpy as np
 import argparse
+import json
+
 
 BCP_47_CODES_URL = "https://github.com/facebookresearch/flores/blob/main/flores200/README.md#languages-in-flores-200"
 
 
-def main(model_name, port, input_texts, tgt_lang, src_lang="eng_Latn"):
+def main(model_name, port, data):
     client = grpcclient.InferenceServerClient(url=f"localhost:{port}")
 
-    input_arr = np.array([text.encode() for text in input_texts], dtype=np.object_)
-    tgt_lang_arr = np.array([tgt_lang.encode()], dtype=np.object_)
-    src_lang_arr = np.array([src_lang.encode()], dtype=np.object_)
+    input_texts = [item["input_text"] for item in data]
+    tgt_langs = [item["tgt_lang"] for item in data]
+    src_langs = [item.get("src_lang", "eng_Latn") for item in data]
+
+    input_arr = np.array([[text.encode()] for text in input_texts], dtype=np.object_)
+    tgt_lang_arr = np.array([[l.encode()] for l in tgt_langs], dtype=np.object_)
+    src_lang_arr = np.array([[l.encode()] for l in src_langs], dtype=np.object_)
 
     tensors = [
         grpcclient.InferInput("input", input_arr.shape, datatype="BYTES"),
@@ -39,24 +45,21 @@ if __name__ == "__main__":
     )
     parser.add_argument("--port", default=8001)
     parser.add_argument(
-        "--input", nargs="+", required=True, help="List of texts you want to translate."
-    )
-    parser.add_argument(
-        "--tgt_lang",
+        "--input_file",
         required=True,
-        help=f"Target language for translation. This argument is always required. Refer to the provided link for available language BCP-47 codes: {BCP_47_CODES_URL}",
-    )
-    parser.add_argument(
-        "--src_lang",
-        default="eng_Latn",
-        help=f"Source language for translation. By default, English (eng_Latn) is set. In order to translate from a different language, specify the BCP-47 code. Refer to the provided link for available BCP-47 codes: {BCP_47_CODES_URL}",
+        help=(
+            "Path to a JSON file containing a list of translation requests. Each request should be an object with fields: "
+            "'input_text' and 'tgt_lang'. The optional 'src_lang' field indicates the source language. If not specified, "
+            "'eng_Latn' (English) will be used as the default source language. "
+            "The 'tgt_lang' field specifies the target language for translation. "
+            f"Refer to the provided link for available language BCP-47 codes: {BCP_47_CODES_URL}. "
+            "Example JSON structure: [{'input_text': 'Hello', 'tgt_lang': 'fr_Latn'}, ...]."
+        ),
     )
 
     args = parser.parse_args()
-    main(
-        model_name=args.model_name,
-        port=args.port,
-        input_texts=args.input,
-        tgt_lang=args.tgt_lang,
-        src_lang=args.src_lang,
-    )
+
+    with open(args.input_file, "r") as f:
+        data = json.load(f)
+
+    main(model_name=args.model_name, port=args.port, data=data)
