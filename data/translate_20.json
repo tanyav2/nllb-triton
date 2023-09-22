@@ -1,0 +1,102 @@
+[
+    {
+        "input_text": "El sol brilla intensamente sobre la ciudad.",
+        "src_lang": "es",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Le soleil brille vivement sur la ville.",
+        "src_lang": "fr",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Die Sonne scheint hell über der Stadt.",
+        "src_lang": "de",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Il sole splende luminosamente sulla città.",
+        "src_lang": "it",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "O sol brilha intensamente sobre a cidade.",
+        "src_lang": "pt",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "De zon schijnt fel over de stad.",
+        "src_lang": "nl",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Солнце ярко светит над городом.",
+        "src_lang": "ru",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "太阳在城市上空明亮地照耀。",
+        "src_lang": "zh",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "都市の上で太陽は明るく輝いている。",
+        "src_lang": "ja",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "도시 위에서 태양이 밝게 빛나다.",
+        "src_lang": "ko",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "الشمس تشرق بقوة فوق المدينة.",
+        "src_lang": "ar",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "शहर के ऊपर सूर्ज तेज़ रोशनी से चमक रहा है।",
+        "src_lang": "hi",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "শহরের উপরে সূর্য উজ্জ্বলভাবে চমকে উঠছে।",
+        "src_lang": "bn",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Güneş, şehrin üzerinde parlak bir şekilde parlıyor.",
+        "src_lang": "tr",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Solen skiner ljust över staden.",
+        "src_lang": "sv",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Ο ήλιος λάμπει φωτεινά πάνω από την πόλη.",
+        "src_lang": "el",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Aurinko paistaa kirkkaasti kaupungin yllä.",
+        "src_lang": "fi",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Słońce świeci jasno nad miastem.",
+        "src_lang": "pl",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "Mặt trời chiếu sáng trên thành phố.",
+        "src_lang": "vi",
+        "tgt_lang": "en"
+    },
+    {
+        "input_text": "השמש זורחת בהירות מעל העיר.",
+        "src_lang": "he",
+        "tgt_lang": "en"
+    }
+]
