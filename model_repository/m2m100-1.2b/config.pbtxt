@@ -1,0 +1,36 @@
+name: "m2m100-1.2b"
+backend: "python"
+max_batch_size: 128
+dynamic_batching { }
+
+input [
+  {
+    name: "input"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  },
+  {
+    name: "tgt_lang"
+    data_type: TYPE_STRING
+    dims: [ 1 ]
+  },
+  {
+    name: "src_lang"
+    data_type: TYPE_STRING
+    dims: [ 1 ]
+  }
+]
+
+output [
+  {
+    name: "translation"
+    data_type: TYPE_STRING
+    dims: [ -1 ]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_GPU
+  }
+]
