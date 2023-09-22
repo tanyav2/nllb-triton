@@ -12,7 +12,7 @@ input [
   {
     name: "tgt_lang"
     data_type: TYPE_STRING
-    dims: [ -1 ]
+    dims: [ 1 ]
   },
   {
     name: "src_lang"
