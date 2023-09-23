@@ -103,5 +103,13 @@
         "input_text": "השמש זורחת בהירות מעל העיר.",
         "src_lang": "he",
         "tgt_lang": "en"
+    },
+    {
+        "input_text": "what an easy breezy day it is today",
+        "tgt_lang": "hi"
+    },
+    {
+        "input_text": "I saw her duck.",
+        "tgt_lang": "ja"
     }
 ]
