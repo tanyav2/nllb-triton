@@ -31,11 +31,11 @@ class TritonPythonModel:
         for request in requests:
             image_bytes = pb_utils.get_input_tensor_by_name(request, "image").as_numpy()
             points = pb_utils.get_input_tensor_by_name(request, "points").as_numpy()
-            boxes = pb_utils.get_input_tensor_by_name(request, "boxes").as_numpy()
+            box = pb_utils.get_input_tensor_by_name(request, "box").as_numpy()
             labels = pb_utils.get_input_tensor_by_name(request, "labels").as_numpy()
 
             # Ensure at least points or boxes is provided
-            if points is None and boxes is None:
+            if points is None and box is None:
                 error_message = "Either points or boxes must be provided."
                 logger.error(error_message)
                 return [pb_utils.InferenceResponse(error=pb_utils.InferenceError(message=error_message))]
@@ -46,7 +46,7 @@ class TritonPythonModel:
             inputs = self.processor(image, return_tensors="pt").to("cuda")
             image_embeddings = self.model.get_image_embeddings(inputs["pixel_values"])
 
-            inputs = self.processor(image, input_points=points, input_boxes=boxes, input_labels=labels, return_tensors="pt").to("cuda")
+            inputs = self.processor(image, input_points=points, input_boxes=box, input_labels=labels, return_tensors="pt").to("cuda")
             inputs.pop("pixel_values", None) # pop the pixel_values as they are not neded
             inputs.update({"image_embeddings": image_embeddings})
 

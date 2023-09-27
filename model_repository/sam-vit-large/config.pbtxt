@@ -22,7 +22,7 @@ input [
     optional: true
   },
   {
-    name: "boxes"
+    name: "box"
     data_type: TYPE_FP32
     dims: [ 4 ]  # Fixed size for a single box with 4 coordinates
     optional: true

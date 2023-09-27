@@ -1,0 +1,6 @@
+{
+    "image_file": "path_to_image.jpg",
+    "points": [[820, 1080]],
+    "labels": [1],
+    "boxes": [650, 900, 1000, 1250]
+}

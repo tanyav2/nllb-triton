@@ -2,7 +2,10 @@ import tritonclient.grpc as grpcclient
 import numpy as np
 import argparse
 import json
+import matplotlib
 import matplotlib.pyplot as plt
+from PIL import Image
+matplotlib.use('Agg')
 
 
 # Utility functions for visualization
@@ -21,15 +24,21 @@ def show_box(box, ax):
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
 
-def show_boxes_on_image(raw_image, boxes):
+
+def show_boxes_on_image(raw_image, boxes, save_path=None):
     plt.figure(figsize=(10,10))
     plt.imshow(raw_image)
     for box in boxes:
       show_box(box, plt.gca())
     plt.axis('on')
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+    else:
+        plt.show()
 
-def show_points_on_image(raw_image, input_points, input_labels=None):
+
+def show_points_on_image(raw_image, input_points, input_labels=None, save_path=None):
     plt.figure(figsize=(10,10))
     plt.imshow(raw_image)
     input_points = np.array(input_points)
@@ -39,24 +48,14 @@ def show_points_on_image(raw_image, input_points, input_labels=None):
       labels = np.array(input_labels)
     show_points(input_points, labels, plt.gca())
     plt.axis('on')
-    plt.show()
-
-def show_points_and_boxes_on_image(raw_image, boxes, input_points, input_labels=None):
-    plt.figure(figsize=(10,10))
-    plt.imshow(raw_image)
-    input_points = np.array(input_points)
-    if input_labels is None:
-      labels = np.ones_like(input_points[:, 0])
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
     else:
-      labels = np.array(input_labels)
-    show_points(input_points, labels, plt.gca())
-    for box in boxes:
-      show_box(box, plt.gca())
-    plt.axis('on')
-    plt.show()
+        plt.show()
 
 
-def show_points_and_boxes_on_image(raw_image, boxes, input_points, input_labels=None):
+def show_points_and_boxes_on_image(raw_image, boxes, input_points, input_labels=None, save_path=None):
     plt.figure(figsize=(10,10))
     plt.imshow(raw_image)
     input_points = np.array(input_points)
@@ -68,7 +67,11 @@ def show_points_and_boxes_on_image(raw_image, boxes, input_points, input_labels=
     for box in boxes:
       show_box(box, plt.gca())
     plt.axis('on')
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+    else:
+        plt.show()
 
 
 def show_points(coords, labels, ax, marker_size=375):
@@ -78,7 +81,7 @@ def show_points(coords, labels, ax, marker_size=375):
     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
 
 
-def show_masks_on_image(raw_image, masks, scores):
+def show_masks_on_image(raw_image, masks, scores, save_path=None):
     if len(masks.shape) == 4:
       masks = masks.squeeze()
     if scores.shape[0] == 1:
@@ -92,37 +95,45 @@ def show_masks_on_image(raw_image, masks, scores):
       show_mask(mask, axes[i])
       axes[i].title.set_text(f"Mask {i+1}, Score: {score.item():.3f}")
       axes[i].axis("off")
-    plt.show()
-
-
-def main(model_name, port, files):
-    client = grpcclient.InferenceServerClient(url=f"localhost:{port}")
-
     
+    if save_path:
+        plt.savefig(save_path, bbox_inches='tight', pad_inches=0.1)
+        plt.close()
+    else:
+        plt.show()
 
-    input_texts = [item["input_text"] for item in data]
-    tgt_langs = [item["tgt_lang"] for item in data]
-    src_langs = [item.get("src_lang", "en") for item in data]
 
-    input_arr = np.array([[text.encode()] for text in input_texts], dtype=np.object_)
-    tgt_lang_arr = np.array([[l.encode()] for l in tgt_langs], dtype=np.object_)
-    src_lang_arr = np.array([[l.encode()] for l in src_langs], dtype=np.object_)
+def main(model_name, port, data):
+    client = grpcclient.InferenceServerClient(url=f"localhost:{port}")
+    img_file = data["image_file"]
+    img = Image.open(img_file)
+    with open(img_file, "rb") as f:
+        img_buf = f.read()
 
-    tensors = [
-        grpcclient.InferInput("input", input_arr.shape, datatype="BYTES"),
-        grpcclient.InferInput("tgt_lang", tgt_lang_arr.shape, datatype="BYTES"),
-        grpcclient.InferInput("src_lang", src_lang_arr.shape, datatype="BYTES"),
-    ]
+    img_arr = np.array([img_buf], dtype=np.object_)
+    points = np.array(data["points"], dtype=np.float32)
+    labels = np.array(data["labels"], dtype=np.int32)
+    box = np.array(data["box"], dtype=np.float32)
+    show_points_and_boxes_on_image(img, [box], points, labels, save_path="points_and_boxes.png")
 
-    tensors[0].set_data_from_numpy(input_arr)
-    tensors[1].set_data_from_numpy(tgt_lang_arr)
-    tensors[2].set_data_from_numpy(src_lang_arr)
+    image_t = grpcclient.InferInput("images", img_arr.shape, datatype="BYTES")
+    image_t.set_data_from_numpy(img_arr)
 
-    response = client.infer(model_name=model_name, inputs=tensors)
-    translation_tensor = response.as_numpy("translation")
-    translation = [t.decode() for t in translation_tensor]
-    for t in translation:
-        print(f"{t}\n")
+    points_t = grpcclient.InferInput("points", points.shape, datatype="FP32")
+    points_t.set_data_from_numpy(points)
+
+    labels_t = grpcclient.InferInput("labels", labels.shape, datatype="INT32")
+    labels_t.set_data_from_numpy(labels)
+  
+    box_t = grpcclient.InferInput("box", box.shape, datatype="FP32")
+    box_t.set_data_from_numpy(box)
+
+    response = client.infer(model_name=model_name, inputs=[image_t, points_t, labels_t, box_t])
+    masks = response.as_numpy("masks")
+    scores = response.as_numpy("scores")
+    show_masks_on_image(img, masks, scores, save_path="masks.png")
+    print(masks)
+    print(scores)
 
 
 if __name__ == "__main__":
@@ -135,10 +146,14 @@ if __name__ == "__main__":
     )
     parser.add_argument("--port", default=8001)
     parser.add_argument(
-        "--files",
+        "--input_file",
         required=True,
-        nargs='+',
-        help="Paths to the image files to be segmented. Multiple paths can be specified.",
+        help=(
+            "Path to a JSON file containing a list of segmentation requests. Each request should be an object with fields: "
+            "'image_file', 'points', 'labels' and 'boxes'."
+        ),
     )
     args = parser.parse_args()
-    main(args.model_name, args.port, args.files)
+    with open(args.input_file, "r") as f:
+        data = json.load(f)
+    main(args.model_name, args.port, data)
