@@ -30,24 +30,27 @@ class TritonPythonModel:
         responses = []
         for request in requests:
             image_bytes = pb_utils.get_input_tensor_by_name(request, "image").as_numpy()
-            points = pb_utils.get_input_tensor_by_name(request, "points").as_numpy()
-            box = pb_utils.get_input_tensor_by_name(request, "box").as_numpy()
-            labels = pb_utils.get_input_tensor_by_name(request, "labels").as_numpy()
+            points = pb_utils.get_input_tensor_by_name(request, "points")
+            box = pb_utils.get_input_tensor_by_name(request, "box")
+            labels = pb_utils.get_input_tensor_by_name(request, "labels")
 
-            # Ensure at least points or boxes is provided
-            if points is None and box is None:
-                error_message = "Either points or boxes must be provided."
-                logger.error(error_message)
-                return [pb_utils.InferenceResponse(error=pb_utils.InferenceError(message=error_message))]
+            if not (points or box):
+                return self._error_response("Either points or boxes must be provided.")
+            if labels and not points:
+                return self._error_response("Labels provided but no points provided.")
             
-            # check if label is not none, it is equal to num of points
+            points = [points.as_numpy().tolist()] if points else None
+            box = [[box.as_numpy().tolist()]] if box else None
+            labels = labels.as_numpy().reshape(-1, 1).tolist() if labels else None
+            if labels and len(labels) != len(points):
+                return self._error_response("Number of labels should be equal to number of points.")
 
             image = Image.open(io.BytesIO(image_bytes[0]))
             inputs = self.processor(image, return_tensors="pt").to("cuda")
             image_embeddings = self.model.get_image_embeddings(inputs["pixel_values"])
 
             inputs = self.processor(image, input_points=points, input_boxes=box, input_labels=labels, return_tensors="pt").to("cuda")
-            inputs.pop("pixel_values", None) # pop the pixel_values as they are not neded
+            inputs.pop("pixel_values", None)  # pop the pixel_values as they are not needed
             inputs.update({"image_embeddings": image_embeddings})
 
             with torch.no_grad():
@@ -56,8 +59,13 @@ class TritonPythonModel:
             masks = self.processor.image_processor.post_process_masks(outputs.pred_masks.cpu(), inputs["original_sizes"].cpu(), inputs["reshaped_input_sizes"].cpu())
             scores = outputs.iou_scores
 
-            out_masks = pb_utils.Tensor("masks", masks.numpy())
-            out_scores = pb_utils.Tensor("scores", scores.numpy())
+            out_masks = pb_utils.Tensor("masks", masks[0][0].numpy())
+            out_scores = pb_utils.Tensor("scores", scores[0][0].cpu().numpy())
             responses.append(pb_utils.InferenceResponse(output_tensors=[out_masks, out_scores]))
 
         return responses
+    
+    @staticmethod
+    def _error_response(msg):
+        logger.error(msg)
+        return [pb_utils.InferenceResponse(error=pb_utils.InferenceError(message=msg))]
