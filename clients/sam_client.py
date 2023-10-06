@@ -5,6 +5,7 @@ import tritonclient.grpc as grpcclient
 from PIL import Image
 import matplotlib
 import matplotlib.pyplot as plt
+import time
 
 matplotlib.use('Agg')
 
@@ -94,9 +95,13 @@ def main(model_name, port, data):
         "both" if "box" in data and "points" in data else ("box" if "box" in data else "points"), None)
     show_on_image(img, data.get("box"), data.get("points"), data.get("labels"), save_path)
 
+    start_time = time.time()
     response = client.infer(model_name=model_name, inputs=inputs)
+    end_time = time.time()
+    print(f"Inference time: {end_time - start_time:.4f} seconds")
+
     masks = response.as_numpy("masks")
-    scores = response.as_numpy("scores")
+    scores = response.as_numpy("iou_predictions")
     show_masks_on_image(img, masks, scores, save_path="masks.png")
     print(masks)
     print(scores)

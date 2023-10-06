@@ -7,6 +7,7 @@ import logging
 import sys
 from PIL import Image
 import io
+import time
 
 LOG_LEVEL = logging.DEBUG
 logger = logging.getLogger("postprocessing")
@@ -46,18 +47,27 @@ class TritonPythonModel:
                 return self._error_response("Number of labels should be equal to number of points.")
 
             image = Image.open(io.BytesIO(image_bytes[0]))
+            start_time = time.time()
             inputs = self.processor(image, return_tensors="pt").to("cuda")
             image_embeddings = self.model.get_image_embeddings(inputs["pixel_values"])
+            end_time = time.time()
+            print(f"Image processing and embedding extraction took: {end_time - start_time:.4f} seconds")
 
+            start_time = time.time()
             inputs = self.processor(image, input_points=points, input_boxes=box, input_labels=labels, return_tensors="pt").to("cuda")
             inputs.pop("pixel_values", None)  # pop the pixel_values as they are not needed
             inputs.update({"image_embeddings": image_embeddings})
 
             with torch.no_grad():
                 outputs = self.model(**inputs)
+            end_time = time.time()
+            print(f"Model input processing and inference took: {end_time - start_time:.4f} seconds")
 
+            start_time = time.time()
             masks = self.processor.image_processor.post_process_masks(outputs.pred_masks.cpu(), inputs["original_sizes"].cpu(), inputs["reshaped_input_sizes"].cpu())
             scores = outputs.iou_scores
+            end_time = time.time()
+            print(f"Post-processing of outputs took: {end_time - start_time:.4f} seconds")
 
             out_masks = pb_utils.Tensor("masks", masks[0][0].numpy())
             out_scores = pb_utils.Tensor("scores", scores[0][0].cpu().numpy())

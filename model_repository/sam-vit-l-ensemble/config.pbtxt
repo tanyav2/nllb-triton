@@ -1,0 +1,132 @@
+name: "sam-vit-l"
+platform: "ensemble"
+max_batch_size: 128
+dynamic_batching { }
+
+input [
+  {
+    name: "image"
+    data_type: TYPE_STRING
+    dims: [ 1 ]
+  },
+  {
+    name: "points"
+    data_type: TYPE_FP32
+    dims: [ -1, 2 ]  # dynamic number of points, each with x and y coordinates
+    optional: true
+  },
+  {
+    name: "labels"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+    optional: true
+  },
+  {
+    name: "box"
+    data_type: TYPE_FP32
+    dims: [ 4 ]  # Fixed size for a single box with 4 coordinates
+    optional: true
+  }
+]
+
+output [
+  {
+    name: "masks"
+    data_type: TYPE_BOOL
+    dims: [ 3, -1, -1 ]  # 3 channels, dynamic height and width
+  },
+  {
+    name: "scores"
+    data_type: TYPE_FP32
+    dims: [ 3 ]  # always 3 scores
+  }
+]
+
+ensemble_scheduling {
+  step [
+    {
+      model_name: "sam-vit-l-preprocess"
+      model_version: -1
+      input_map {
+        key: "image"
+        value: "image"
+      },
+      input_map {
+        key: "points"
+        value: "points"
+      },
+      input_map {
+        key: "labels"
+        value: "labels"
+      },
+      input_map {
+        key: "box"
+        value: "box"
+      },
+      output_map {
+        key: "image_embeddings"
+        value: "image_embeddings"
+      },
+      output_map {
+        key: "point_coords"
+        value: "point_coords"
+      },
+      output_map {
+        key: "point_labels"
+        value: "point_labels"
+      },
+      output_map {
+        key: "mask_input"
+        value: "mask_input"
+      },
+      output_map {
+        key: "has_mask_input"
+        value: "has_mask_input"
+      },
+      output_map {
+        key: "orig_im_size"
+        value: "orig_im_size"
+      }
+    },
+    {
+      model_name: "sam-vit-l-onnx-quant"
+      model_version: -1
+      input_map {
+        key: "image_embeddings"
+        value: "image_embeddings"
+      },
+      input_map {
+        key: "point_coords"
+        value: "point_coords"
+      },
+      input_map {
+        key: "point_labels"
+        value: "point_labels"
+      },
+      input_map {
+        key: "mask_input"
+        value: "mask_input"
+      },
+      input_map {
+        key: "has_mask_input"
+        value: "has_mask_input"
+      },
+      input_map {
+        key: "orig_im_size"
+        value: "orig_im_size"
+      },
+      output_map {
+        key: "masks"
+        value: "masks"
+      },
+      output_map {
+        key: "iou_predictions"
+        value: "iou_predictions"
+      },
+      output_map {
+        key: "low_res_masks"
+        value: "low_res_masks"
+      }
+    }
+  ]
+}
