@@ -19,9 +19,9 @@ def main(model_name, port, data):
     src_lang_arr = np.array([[l.encode()] for l in src_langs], dtype=np.object_)
 
     tensors = [
-        grpcclient.InferInput("input", input_arr.shape, datatype="BYTES"),
-        grpcclient.InferInput("tgt_lang", tgt_lang_arr.shape, datatype="BYTES"),
-        grpcclient.InferInput("src_lang", src_lang_arr.shape, datatype="BYTES"),
+        grpcclient.InferInput("text", input_arr.shape, datatype="BYTES"),
+        grpcclient.InferInput("target_lang", tgt_lang_arr.shape, datatype="BYTES"),
+        grpcclient.InferInput("source_lang", src_lang_arr.shape, datatype="BYTES"),
     ]
 
     tensors[0].set_data_from_numpy(input_arr)

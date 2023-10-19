@@ -5,17 +5,17 @@ dynamic_batching { }
 
 input [
   {
-    name: "input"
+    name: "text"
     data_type: TYPE_STRING
     dims: [ -1 ]
   },
   {
-    name: "tgt_lang"
+    name: "target_lang"
     data_type: TYPE_STRING
     dims: [ 1 ]
   },
   {
-    name: "src_lang"
+    name: "source_lang"
     data_type: TYPE_STRING
     dims: [ 1 ]
   }
